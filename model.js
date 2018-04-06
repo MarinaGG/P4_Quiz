@@ -1,3 +1,47 @@
+
+const Sequelize = require('sequelize');
+
+//nueva base de datos
+const sequelize= new Sequelize("sqlite:quizzes.sqlite",{logging: false});
+
+//definimos un modelo de datos: quiz
+sequelize.define('quiz',{
+	question: {
+		type: Sequelize.STRING,
+		unique: {msg:"Ya existe esta pregunta."},
+		validate: {notEmpty: {msg:"La pregunta no puede estar vacía."}}
+	},
+	answer: {
+		type: Sequelize.STRING,
+		validate: {notEmpty: {msg:"La respuesta no puede estar vacía."}}
+	}
+});
+
+//se crea un array que se llama models, donde estan definidos los modelos---- models.quiz
+
+//sincronización
+sequelize.sync()//Esto es una promesa
+.then(()=>sequelize.models.quiz.count())//otra promesa
+.then(count=>{
+	if(!count){
+		return sequelize.models.quiz.bulkCreate([
+		{question: "Capital de España", answer: "Madrid"},
+		{question: "Capital de Italia", answer: "Roma"},
+		{question: "Capital de Francia", answer: "París"},
+		{question: "Capital de Portugal", answer: "Lisboa"}
+		]);
+	}
+})
+.catch(error =>{
+	console.log(error);
+});
+
+module.exports=sequelize;
+
+
+
+/*
+//TODO ESTO YA NO NOS SERVIRÁ
 const fs = require("fs");
 
 const DB_FILENAME = "quizzes.json";
@@ -93,3 +137,4 @@ exports.deleteByIndex = id => {
 
 //Carga los quizzes almacenados.
 load();
+*/
