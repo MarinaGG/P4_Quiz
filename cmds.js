@@ -4,22 +4,22 @@ const Sequelize =require('sequelize');
 
 
 /*Comando de ayuda*/
-exports.helpCmd = rl =>{
-	log("Comandos:", 'green');
- 	log(" h|help -  Muestra la lista de ayuda.", 'green');
- 	log(" list - Listar los quizzes existentes.", 'green');
- 	log(" show <id> - Muestra la pregunta y la respuesta del quiz indicado.", 'green');
- 	log(" add - Añadir un nuevo quiz interactivamente.", 'green');
- 	log(" delete <id> - Borrar el quiz indicado", 'green');
- 	log(" edit <id> - Editar el quiz indicado.", 'green');
- 	log(" test <id> - Probar el quiz indicado.", 'green');
- 	log(" p|play - Jugar a preguntar aleatoriamente todos los quizzes.", 'green');
- 	log(" credits - Créditos.", 'green');
- 	log(" q|quit - Salir del programa.", 'green');
+exports.helpCmd = (socket,rl) =>{
+	log(socket," Comandos:", 'green');
+ 	log(socket," h|help -  Muestra la lista de ayuda.", 'green');
+ 	log(socket," list - Listar los quizzes existentes.", 'green');
+ 	log(socket," show <id> - Muestra la pregunta y la respuesta del quiz indicado.", 'green');
+ 	log(socket," add - Añadir un nuevo quiz interactivamente.", 'green');
+ 	log(socket," delete <id> - Borrar el quiz indicado", 'green');
+ 	log(socket," edit <id> - Editar el quiz indicado.", 'green');
+ 	log(socket," test <id> - Probar el quiz indicado.", 'green');
+ 	log(socket," p|play - Jugar a preguntar aleatoriamente todos los quizzes.", 'green');
+ 	log(socket," credits - Créditos.", 'green');
+ 	log(socket," q|quit - Salir del programa.", 'green');
  	rl.prompt();
 };
 
-exports.listCmd = rl =>{
+exports.listCmd = (socket,rl) =>{
 	/*
 	model.getAll().forEach((quiz, id) => {log(`[${colorize(id, 'magenta')}]: ${quiz.question}`);
 	});
@@ -45,11 +45,11 @@ exports.listCmd = rl =>{
 
 	.then(quizzes =>{
 		quizzes.forEach(quiz=>{
-			log(`[${colorize(quiz.id, 'magenta')}]: ${quiz.question} ${colorize("=>", "magenta")} ${quiz.answer}`)
+			log(socket, `[${colorize(quiz.id, 'magenta')}]: ${quiz.question} `)
 		});
 	})
 	.catch(error=>{
-		errorlog(error.message);
+		errorlog(socket, error.message);
 	})
 	.then(()=>{
 		rl.prompt();
@@ -58,7 +58,7 @@ exports.listCmd = rl =>{
 
 };
 
-const validateId = id =>{
+const validateId = (id) =>{
 	return new Sequelize.Promise ((resolve, reject)=>{
 		if(typeof id === "undefined"){
 			reject(new Error(`Falta parámetro <id>`));
@@ -77,7 +77,7 @@ const validateId = id =>{
 
 
 
-exports.showCmd = (rl, id) =>{
+exports.showCmd = (socket, rl, id) =>{
 	/*
 	if (typeof id === "undefined") {
 		errorlog(`Falta el parámetro id.`);
@@ -99,12 +99,12 @@ exports.showCmd = (rl, id) =>{
 		if(!quiz){
 			throw new Error ('No existe quiz asociado al <id>');
 		}else{
-			log(`[${colorize(quiz.id, 'magenta')}]: ${quiz.question} ${colorize('=>', 'magenta')} ${quiz.answer}`);
+			log(socket, `[${colorize(quiz.id, 'magenta')}]: ${quiz.question} ${colorize('=>', 'magenta')} ${quiz.answer}`);
 		}
 
 	})
 	.catch(error=>{
-		errorlog(error.message);
+		errorlog(socket, error.message);
 	})
 	.then(()=>{
 		rl.prompt();
@@ -123,7 +123,7 @@ const makeQuestion=(rl, text)=>{
 
 }; 
 
-exports.addCmd = rl =>{
+exports.addCmd = (socket, rl )=>{
 	/*
 	rl.question(colorize(' Introduzca una pregunta: ', 'red'), question => {
 		rl.question(colorize(' Introduzca la respuesta: ', 'red'), answer => {
@@ -144,14 +144,14 @@ exports.addCmd = rl =>{
 		return models.quiz.create(quiz);
 	})
 	.then(quiz=>{
-		log(`${colorize("Se ha añadido: ","magenta")} ${quiz.question} ${colorize(" => ","magenta")} ${quiz.answer}`);
+		log(socket, `${colorize("Se ha añadido: ","magenta")} ${quiz.question} ${colorize(" => ","magenta")} ${quiz.answer}`);
 	})
 	.catch(Sequelize.ValidationError, error =>{
-		errorlog('Quiz erróneo:');
-		error.errors.forEach(({message})=> errorlog(message));
+		errorlog(socket, 'Quiz erróneo:');
+		error.errors.forEach(({message})=> errorlog(socket, message));
 	})
 	.catch(error =>{
-		errorlog(error.message);
+		errorlog(socket, error.message);
 	})
 	.then(()=>{
 		rl.prompt();
@@ -160,7 +160,7 @@ exports.addCmd = rl =>{
 
 };
 
-exports.deleteCmd = (rl, id) =>{
+exports.deleteCmd = (socket, rl, id) =>{
 
 
 	/*if (typeof id === "undefined") {
@@ -181,13 +181,13 @@ exports.deleteCmd = (rl, id) =>{
 		if(!quiz){
 			throw new Error ('No existe quiz asociado al <id>');
 		}else{
-			log(`Se ha borrado el quiz.`);
+			log(socket, `Se ha borrado el quiz.`);
 		}
 
 	})
 
 	.catch(error=>{
-		errorlog(error.message);
+		errorlog(socket, error.message);
 	})
 	.then(()=>{
 		rl.prompt();
@@ -195,7 +195,7 @@ exports.deleteCmd = (rl, id) =>{
 
 };
 
-exports.editCmd = (rl, id) =>{
+exports.editCmd = (socket, rl, id) =>{
 	/*
 	if (typeof id === "undefined") {
 		errorlog(`Falta el parámetro id.`);
@@ -232,10 +232,12 @@ exports.editCmd = (rl, id) =>{
 			throw new Error ('No existe quiz asociado al id');
 		}
 
-		process.stdout.isTTY && setTimeout(()=>{rl.write(quiz.question)},0);
+		//ESTO NO ESTÁ FUNCIONANDO DEL TODO BIEN
+
+		//process.stdout.isTTY && setTimeout(()=>{rl.write(socket,  quiz.question)},0);
 		return makeQuestion(rl,'Introduzca una pregunta: ')
 		.then(q=>{
-			process.stdout.isTTY && setTimeout(()=>{rl.write(quiz.answer)},0);
+			//process.stdout.isTTY && setTimeout(()=>{rl.write(socket, quiz.answer)},0);
 			return makeQuestion(rl, 'Introduzca una respuesta: ')
 			.then(a =>{
 				quiz.question=q;
@@ -248,16 +250,16 @@ exports.editCmd = (rl, id) =>{
 		return quiz.save();
 	})
 	.then(quiz=>{
-		log(` Se ha cambiado el quiz ${colorize(quiz.id, 'magenta')}  por: ${quiz.question} ${colorize('=>', 'magenta')} ${quiz.answer}`);
+		log(socket, ` Se ha cambiado el quiz ${colorize(quiz.id, 'magenta')}  por: ${quiz.question} ${colorize('=>', 'magenta')} ${quiz.answer}`);
 					
 
 	})
 	.catch(Sequelize.ValidationError, error =>{
-		errorlog('Quiz erróneo:');
-		error.errors.forEach(({message})=> errorlog(message));
+		errorlog(socket, 'Quiz erróneo:');
+		error.errors.forEach(({message})=> errorlog(socket, message));
 	})
 	.catch(error =>{
-		errorlog(error.message);
+		errorlog(socket, error.message);
 	})
 	.then(()=>{
 		rl.prompt();
@@ -267,7 +269,7 @@ exports.editCmd = (rl, id) =>{
 
 };
 
-exports.testCmd = (rl, id) =>{
+exports.testCmd = (socket, rl, id) =>{
 	/*
 	if (typeof id === "undefined") {
 	errorlog(`Falta el parámetro id.`);
@@ -303,20 +305,20 @@ exports.testCmd = (rl, id) =>{
 			return makeQuestion(rl, quiz.question+"? : " )
 			.then(a=>{
 				if(quiz.answer.trim().toLowerCase() === a.toLowerCase()){
-					biglog("CORRECTO");
+					biglog(socket, "CORRECTO");
 
 				}else{
-					biglog("INCORRECTO");
+					biglog(socket, "INCORRECTO");
 				}
 			});
 		}
 	})
 	.catch(Sequelize.ValidationError, error =>{
-		errorlog('Quiz erróneo:');
-		error.errors.forEach(({message})=> errorlog(message));
+		errorlog(socket, 'Quiz erróneo:');
+		error.errors.forEach(({message})=> errorlog(socket, message));
 	})
 	.catch(error =>{
-		errorlog(error.message);
+		errorlog(socket, error.message);
 	})
 	.then(()=>{
 		rl.prompt();
@@ -325,7 +327,7 @@ exports.testCmd = (rl, id) =>{
 
 };
 
-exports.playCmd = rl =>{
+exports.playCmd = (socket,rl) =>{
 	/*
 	let score = 0;
 	let qUnresolved = [];
@@ -367,8 +369,8 @@ exports.playCmd = rl =>{
 		return Promise.resolve()
 		.then(() =>{
 			if(qUnresolved.length===0){
-				log(" Fin del juego");
-				biglog(score,"blue");
+				log(socket, "Fin del juego");
+				biglog(socket, score,"blue");
 				score=0;
 				rl.prompt();
 				return;
@@ -380,23 +382,23 @@ exports.playCmd = rl =>{
 				makeQuestion(rl, quiz.question+"?: ")
 				.then(a=>{
 					if(quiz.answer.trim().toLowerCase() === a.toLowerCase()){
-					biglog("CORRECTO");
+					biglog(socket,"CORRECTO");
 					score++;
-					log('Número de aciertos: '+score);
+					log(socket,'Número de aciertos: '+score);
 					
 					playOne();
 
 
 					}else{
-						biglog("INCORRECTO");
-						log('Número de aciertos: '+score);
+						biglog(socket,"INCORRECTO");
+						log(socket,'Número de aciertos: '+score);
 						score = 0;
 
 					}
 
 				})
 				.catch(error=>{
-					errorlog(error.message);
+					errorlog(socket, error.message);
 				})
 				.then(()=>{
 					rl.prompt();
@@ -414,7 +416,7 @@ exports.playCmd = rl =>{
 		return playOne();
 	})
 	.catch(error=>{
-		errorlog(error.message);
+		errorlog(socket, error.message);
 	})
 	.then(()=>{
 		rl.prompt();
@@ -425,14 +427,14 @@ exports.playCmd = rl =>{
 
 
 
-exports.creditsCmd = rl =>{
-	log("Autores de la práctica:", 'red');
- 	log("MARINA GONZALEZ GONZALEZ", 'green');
+exports.creditsCmd = (socket, rl )=>{
+	log(socket, "Autores de la práctica:", 'red');
+ 	log(socket, "MARINA GONZALEZ GONZALEZ", 'green');
  	
  	rl.prompt();
 };
 
-exports.quitCmd = rl =>{
+exports.quitCmd =(socket, rl) =>{
 	rl.close();
-	rl.prompt();
-};
+	socket.end();
+	};
